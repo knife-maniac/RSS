@@ -8,8 +8,8 @@ async function saveToFile(items: Item[]): Promise<string> {
     // save to local file (include fetch timestamp)
     const fs = await import('fs/promises');
     const cwd = process.cwd();
-    const path = cwd + '/tmp/feed.json';
-    await fs.mkdir(cwd + '/tmp', { recursive: true });
+    const path = cwd + '/dist/feed.json';
+    await fs.mkdir(cwd + '/dist', { recursive: true });
     const payload = {
         fetchedAt: new Date().toISOString(),
         items
