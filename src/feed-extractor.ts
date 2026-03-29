@@ -1,7 +1,9 @@
-import Parser from 'rss-parser';
-import { feedConfiguration } from './feed-configuration';
+import { parseFeed } from '@rowanmanning/feed-parser';
 
-const parser = new Parser();
+import { feedConfiguration } from './feed-configuration';
+import { Feed } from '@rowanmanning/feed-parser/lib/feed/base';
+import { FeedItem } from '@rowanmanning/feed-parser/lib/feed/item/base';
+
 
 
 export type Item = {
@@ -13,58 +15,48 @@ export type Item = {
     link: string;
     score?: number;
 
-    content?: string;
+    description?: string;
     image?: string | null;
     pubDate?: string | null;
 };
 
 
-function getImageFromRaw(i: any): string | null {
-    // Check common fields first
-    if (!i) return null;
-    // enclosure (common RSS field)
-    if (i.enclosure && typeof i.enclosure === 'object' && i.enclosure.url) return String(i.enclosure.url);
-    // media:content or media:thumbnail
-    if (i['media:content'] && i['media:content']['$'] && i['media:content']['$'].url) return String(i['media:content']['$'].url);
-    if (i['media:thumbnail'] && i['media:thumbnail'].url) return String(i['media:thumbnail'].url);
-    if (i['media:thumbnail'] && i['media:thumbnail']['$'] && i['media:thumbnail']['$'].url) return String(i['media:thumbnail']['$'].url);
-    // itunes image
-    if (i['itunes:image'] && (i['itunes:image'].href || i['itunes:image'].url)) return String(i['itunes:image'].href ?? i['itunes:image'].url);
-    // some parsers put image on item.image
-    if (i.image && (i.image.url || i.image)) return String(i.image.url ?? i.image);
+function getImageFromRaw(text: any): string | null {
     // try to extract first <img> from content or content:encoded
-    const html = i.content || i['content:encoded'] || i.summary || i.description || '';
-    const m = /<img[^>]+src=["']?([^"' >]+)["']?/i.exec(String(html));
+    const m = /<img[^>]+src=["']?([^"' >]+)["']?/i.exec(String(text));
     if (m && m[1]) return m[1];
     return null;
 }
 
-function getFeedIcon(feed: any) {
-    return feed?.image?.url ?? feed?.image ?? feed?.['itunes:image']?.href ?? feed?.['itunes:image']?.url ?? null;
-}
-
-function getFavicon(rawUrl: string): string | null {
-    try {
-        const url = new URL(rawUrl);
-        return `${url.origin}/favicon.ico`;
-    } catch (err) {
-        return null;
+function getFeedIcon(feed: Feed, feedUrl: string): string | null {
+    let feedIcon = feed?.image?.url ?? null;
+    if (feedIcon === null) {
+        try {
+            const url = new URL(feedUrl);
+            feedIcon = `${url.origin}/favicon.ico`;
+        } catch (err) {
+            return null;
+        }
     }
+    return feedIcon;
 }
 
-async function fetchFeedItems(feed: feedConfiguration): Promise<Item[]> {
-    const result = await parser.parseURL(feed.url);
-    const items: Item[] = (result.items || []).map((i: any) => {
+
+async function fetchFeedItems(feedConfiguration: feedConfiguration): Promise<Item[]> {
+    const response = await fetch(feedConfiguration.url);
+    const feed: Feed = parseFeed(await response.text());
+    const items: Item[] = (feed.items).map((item: FeedItem) => {
         return {
-            feedIcon: getFeedIcon(result) ?? getFavicon(feed.url),
-            feedTitle: feed.name ?? result.title ?? '',
-            feedConfiguration: feed,
-            title: i.title ?? '',
-            link: i.link ?? i.guid ?? '',
-            content: i.contentSnippet ?? i.content ?? '',
-            image: getImageFromRaw(i),
-            pubDate: i.pubDate ? new Date(i.pubDate).toISOString() : null
-        } as Item;
+            feedConfiguration,
+            feedTitle: feedConfiguration.name ?? feed.title ?? '',
+            feedIcon: getFeedIcon(feed, feedConfiguration.url),
+
+            title: item.title ?? '',
+            link: item.url ?? '',
+            description: item.description ?? item.content ?? '',
+            image: item.image?.url || getImageFromRaw(item.description) || getImageFromRaw(item.content),
+            pubDate: item.published ? new Date(item.published).toISOString() : null
+        };
     });
     return items;
 }

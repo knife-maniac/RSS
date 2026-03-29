@@ -24,7 +24,7 @@ function createItemElement(item) {
 
     // Feed icon (small)
     const icon = document.createElement('img');
-    icon.src = item.feedIcon || item.image || '/placeholder.webp';
+    icon.src = item.feedIcon;
     icon.alt = item.feedTitle ? `${item.feedTitle} icon` : 'Feed icon';
     icon.className = 'feed-icon';
     icon.onerror = () => { icon.onerror = null; icon.src = '/placeholder.webp'; };
@@ -47,9 +47,9 @@ function createItemElement(item) {
     // Append header to list item
     li.appendChild(header);
 
-    // Content row: left = main text, right = optional thumbnail
-    const content = document.createElement('div');
-    content.className = 'item-content';
+    // Description row: left = main text, right = optional thumbnail
+    const description = document.createElement('div');
+    description.className = 'item-description';
 
     const main = document.createElement('div');
     main.className = 'item-main';
@@ -62,12 +62,12 @@ function createItemElement(item) {
     a.className = 'item-title';
     main.appendChild(a);
 
-    // Optional content snippet
-    if (item.content) {
+    // Optional description snippet
+    if (item.description) {
         const span = document.createElement('span');
         span.className = 'snippet';
-        // Truncate content to ~300 chars for preview
-        const txt = String(item.content).replace(/<[^>]+>/g, '');
+        // Truncate description to ~300 chars for preview
+        const txt = String(item.description).replace(/<[^>]+>/g, '');
         span.textContent = txt.length > 300 ? txt.slice(0, 300) + '…' : txt;
         main.appendChild(span);
     }
@@ -80,7 +80,7 @@ function createItemElement(item) {
     }
     main.appendChild(footer);
 
-    content.appendChild(main);
+    description.appendChild(main);
 
     // Thumbnail on the right (optional)
     if (item.image) {
@@ -91,11 +91,11 @@ function createItemElement(item) {
         thumb.alt = item.title || '';
         thumb.onerror = () => { thumb.onerror = null; thumb.src = '/placeholder.webp'; };
         thumbWrap.appendChild(thumb);
-        content.appendChild(thumbWrap);
+        description.appendChild(thumbWrap);
     }
 
-    // Append content to list item
-    li.appendChild(content);
+    // Append description to list item
+    li.appendChild(description);
 
     return li;
 }

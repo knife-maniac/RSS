@@ -103,7 +103,7 @@ ul#items li .item-header {
     opacity: 0.4;
 }
 
-.item-content .item-main {
+.item-description .item-main {
     display: flex;
     flex-direction: column;
 }
