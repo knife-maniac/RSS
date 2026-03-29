@@ -10,13 +10,7 @@ npm install
 
 2. Configure RSS feeds in file `src/feed-configuration`.
 
-
-3. Build the solution:
-```bash
-npm run build
-```
-
-4. Add a '.env' file at the root, with FTP configuration:
+3. Add a '.env' file at the root, with FTP configuration:
 ```bash
 FTP_HOST={ftp.my-server.com}
 FTP_PATH={/deployment/path}
@@ -25,7 +19,12 @@ FTP_PASSWORD={password}
 FTP_SECURE={true|false}
 ```
 
-5. Add crontab to run the script periodically:
+4. Build the solution:
 ```bash
-* * * * * cd ~/path/to/my/repo && /path/to/node dist/index.js
+npm run build
+```
+
+5. Add crontab to run the script periodically (example below is every `n` minutes):
+```bash
+*/n * * * * cd ~/path/to/my/repo && /path/to/node dist/index.js
 ```
